@@ -1110,8 +1110,9 @@ namespace FloatingHorizont
             }
 
             curve.apply_matrix(multiply_matrix(curve.get_matrix(), complete_matrix_perspective));
+            
 
-           foreach(Side hor in curve.sides)
+            foreach (Side hor in curve.sides) 
             {
                 
                 var cur_hor = new List<point3>();
