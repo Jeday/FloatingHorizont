@@ -15,10 +15,12 @@ namespace FloatingHorizont
 
         OrbitCamera cam = new OrbitCamera(10, 0, 0, 0, new Point3D(0, 0, 0), (float)(90 * Math.PI / 180), (float)(90 * Math.PI / 180), 1, 100);
         Func<float, float, float> f = (float x, float y) => (float)(Math.Sin(x) + Math.Cos(y));
-        float x0=-25, x1= 25, y0 = -25, y1= 25;
+        float x0=-5, x1=5, y0 = -5, y1= 5;
+        Figure curve_figure;
         public Form1()
         {
             InitializeComponent();
+            curve_figure = Figure.get_curve(x0, x1, y0, y1, 10, 25, f);
         }
 
         private void Form1_KeyPress(object sender, KeyPressEventArgs e)
@@ -71,7 +73,7 @@ namespace FloatingHorizont
 
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
-            cam.CameraRender(pictureBox1, e.Graphics, f, new PointF(x0, x1), new PointF(y0, y1));
+            cam.CameraRender(pictureBox1, e.Graphics, curve_figure);
         }
     }
 
@@ -878,27 +880,17 @@ namespace FloatingHorizont
             for (int i = 0; i <= n_x; ++i)
             {
                 y = y0;
+                Side line = new Side();
                 for (int j = 0; j <= n_y; ++j)
                 {
                     res.points.Add(new Point3D(x, y, f(x, y)));
+                    line.points.Add(res.points.Count - 1);
                     y += step_y;
                 }
+                res.sides.Add(line);
                 x += step_x;
             }
 
-            for (int i = 0; i < res.points.Count; ++i)
-            {
-                if ((i + 1) % (n_y + 1) == 0)
-                    continue;
-                if (i / (n_y + 1) == n_x)
-                    break;
-
-                Side s = new Side(res);
-                s.points.AddRange(new int[] { i, i + 1, i + n_y + 2, i + n_y + 1 });
-                s.points.Reverse();
-                res.sides.Add(s);
-            }
-            res.set_rand_color();
             return res;
         }
 
@@ -1028,14 +1020,16 @@ namespace FloatingHorizont
         /// <param name="rend_obj"> PictureBox to rednder to</param>
         /// <param name="scene"> list of objects to render, is copied</param>
         /// <param name="light"> Light position and color </param>
-        public void CameraRender(PictureBox rend_obj,Graphics g, Func<float, float, float> curve,PointF borderx, PointF bordexy)
+        public void CameraRender(PictureBox rend_obj,Graphics g, Figure curve)
         {
 
             int h = rend_obj.Height;
             int w = rend_obj.Width;
-            //g.TranslateTransform(w / 2, h / 2);
-            //g.ScaleTransform(1, 1);
-            int divs = 25 ;
+
+
+            curve = new Figure(curve);
+
+          
             point3 ViewPortTranform(Point3D p)
             {
                 return new point3((int)((1 + p.x) * w / 2),
@@ -1043,41 +1037,7 @@ namespace FloatingHorizont
                                   (int)((p.z) * 100000000),p);
             }
 
-            // update_full_matrix();
-
-            Point3D PointToView(Point3D p) {
-              float[,] matrx = multiply_matrix(new float[1, 4] { { p.x, p.y, p.z, 1 } },complete_matrix_perspective);
-              return new Point3D(matrx[0,0] / matrx[0, 3], matrx[0, 1] / matrx[0, 3],matrx[0, 2] / matrx[0, 3]);
-            }
-
-
-            float xstep, xstart, xfinish;
-            Func<float, bool> compare;
-            Point3D X0Y0 = new Point3D(borderx.X, bordexy.X, curve(borderx.X, bordexy.X));
-            Point3D X1Y1 = new Point3D(borderx.Y, bordexy.Y, curve(borderx.Y, bordexy.Y));
             
-            var px0y0 = ViewPortTranform(PointToView(X0Y0));
-            var px1y1 = ViewPortTranform(PointToView(X0Y0));
-            if (px0y0.z < px1y1.z)
-            {
-                xstep = (borderx.Y - borderx.X) / divs;
-                xstart = borderx.X;
-                xfinish = borderx.Y;
-                compare = (float x) => x< xfinish;
-
-            }
-            else
-            {
-                xstep = (borderx.X - borderx.Y) / divs;
-                xstart = borderx.Y;
-                xfinish = borderx.X;
-                compare = (float x) => x > xfinish;
-
-            }
-
-            //float zstep = (rect.Last().Item1.z - rect.First().Item1.z) / zdivs;
-            
-            float ystep = (bordexy.Y - bordexy.X) / divs/2;
             var Maxhorizont = new int[w];
             var Minhorizont = new int[w];
             for (int i = 0; i < w; i++)
@@ -1086,16 +1046,13 @@ namespace FloatingHorizont
                 Minhorizont[i] = h;
             }
 
+            curve.apply_matrix(multiply_matrix(curve.get_matrix(), complete_matrix_perspective));
 
-            for (float x = xstart; compare(x); x += xstep)
+           foreach(Side hor in curve.sides)
             {
-                var hor = new List<Point3D>();
-                for (float y = bordexy.X; y < bordexy.Y; y += ystep)
-                    hor.Add(PointToView(new Point3D(x, y, curve(x, y))));
-
-
+                
                 var cur_hor = new List<point3>();
-                foreach (Point3D p in hor)
+                foreach (Point3D p in hor.points.Select(i => curve.points[i]))
                 {
                     point3 vp = ViewPortTranform(p);
                     cur_hor.Add(new point3(vp));
