@@ -140,6 +140,12 @@ namespace FloatingHorizont
         {
             pictureBox1.Invalidate();
         }
+
+        private void curveType_KeyDown(object sender, KeyEventArgs e)
+        {
+            e.SuppressKeyPress = true;
+            e.Handled = true;
+        }
     }
 
     public class Point3D
@@ -1111,7 +1117,9 @@ namespace FloatingHorizont
             }
 
             curve.apply_matrix(multiply_matrix(curve.get_matrix(), complete_matrix_perspective));
-            
+
+            if (curve.sides.First().get_point(0).z > curve.sides.Last().get_point(0).z)
+                curve.sides.Reverse();
 
             foreach (Side hor in curve.sides) 
             {
