@@ -14,13 +14,12 @@ namespace FloatingHorizont
     {
 
         OrbitCamera cam = new OrbitCamera(10, 0, 0, 0, new Point3D(0, 0, 0), (float)(90 * Math.PI / 180), (float)(90 * Math.PI / 180), 1, 100);
-        Func<float, float, float> f = (float x, float y) => (float)(Math.Sin(x) + Math.Cos(y));
-        float x0=-5, x1=5, y0 = -5, y1= 5;
         Figure curve_figure;
         public Form1()
         {
             InitializeComponent();
-            curve_figure = Figure.get_curve(x0, x1, y0, y1, 10, 25, f);
+            curveType.SelectedIndex = 0;
+            curve_figure = curve();
         }
 
         private void Form1_KeyPress(object sender, KeyPressEventArgs e)
@@ -75,8 +74,72 @@ namespace FloatingHorizont
         {
             cam.CameraRender(pictureBox1, e.Graphics, curve_figure);
         }
-    }
 
+        /// <summary>
+        ///  Generates new Curve based on controls data
+        /// </summary>
+        /// <returns></returns>
+        private Figure curve()
+        {
+            Func<float, float, float> f;
+            switch (curveType.Text)
+            {
+                case "f(x, y) = 5 * cos(x * x + y * y + 1) / (x * x + y * y + 1) + 0.1":
+                    f = (float x, float y) => (float)(5 * (float)Math.Cos(x * x + y * y + 1) / (x * x + y * y + 1) + 0.1);
+                    break;
+                case "f(x, y) = cos(x * x + y * y) / (x * x + y * y + 1)":
+                    f = (float x, float y) => (float)(Math.Cos(x * x + y * y) / (x * x + y * y + 1));
+                    break;
+                case "f(x, y) = sin(x) * cos(y)":
+                    f = (float x, float y) => (float)(Math.Sin(x) * Math.Cos(y));
+                    break;
+                case "f(x, y) = sin(x) + cos(y)":
+                    f = (float x, float y) => (float)(Math.Sin(x) + Math.Cos(y));
+                    break;
+                default:
+                case "f(x, y) = x * x + y * y*":
+                    f = (float x, float y) => x * x + y * y;
+                    break;
+            }
+
+            float x0 = (float)curveX0.Value;
+            float x1 = (float)curveX1.Value;
+            float y0 = (float)curveY0.Value;
+            float y1 = (float)curveY1.Value;
+
+            if (x0 == x1 || y0 == y1)
+                return new Figure();
+
+            if (x1 < x0)
+            {
+                float t = x1;
+                x1 = x0;
+                x0 = t;
+            }
+
+            if (y1 < y0)
+            {
+                float t = y1;
+                y1 = y0;
+                y0 = t;
+            }
+
+            int n_x = (int)curveNX.Value;
+            int n_y = (int)curveNY.Value;
+
+            return Figure.get_curve(x0, x1, y0, y1, n_x, n_y, f);
+        }
+
+        private void curve_ValueChanged(object sender, EventArgs e)
+        {
+            pictureBox1.Invalidate();
+        }
+
+        private void curveType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            pictureBox1.Invalidate();
+        }
+    }
 
     public class Point3D
     {
@@ -1062,7 +1125,8 @@ namespace FloatingHorizont
                 {
 
                     var line = Interpolate(cur_hor[i].x, cur_hor[i].y, cur_hor[i + 1].x, cur_hor[i + 1].y);
-                    var linez =  Interpolate(cur_hor[i].x, cur_hor[i].z, cur_hor[i + 1].x, cur_hor[i + 1].z);                    int index = -1;
+                    var linez =  Interpolate(cur_hor[i].x, cur_hor[i].z, cur_hor[i + 1].x, cur_hor[i + 1].z);
+                    int index = -1;
                     for (int linex = cur_hor[i].x; linex < cur_hor[i + 1].x; ++linex)
                     {
                         index++;
