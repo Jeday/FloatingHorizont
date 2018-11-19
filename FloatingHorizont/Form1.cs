@@ -72,6 +72,7 @@ namespace FloatingHorizont
 
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
+            curve_figure = curve();
             cam.CameraRender(pictureBox1, e.Graphics, curve_figure);
         }
 
