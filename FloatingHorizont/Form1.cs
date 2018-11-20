@@ -94,12 +94,9 @@ namespace FloatingHorizont
                 case "f(x, y) = sin(x) * cos(y)":
                     f = (float x, float y) => (float)(Math.Sin(x) * Math.Cos(y));
                     break;
+                default:
                 case "f(x, y) = sin(x) + cos(y)":
                     f = (float x, float y) => (float)(Math.Sin(x) + Math.Cos(y));
-                    break;
-                default:
-                case "f(x, y) = x * x + y * y*":
-                    f = (float x, float y) => x * x + y * y;
                     break;
             }
 
@@ -1119,7 +1116,7 @@ namespace FloatingHorizont
             curve.apply_matrix(multiply_matrix(curve.get_matrix(), complete_matrix_perspective));
 
             if (curve.sides.First().get_point(0).z > curve.sides.Last().get_point(0).z)
-                curve.sides.Reverse();
+               curve.sides.Reverse();
 
             foreach (Side hor in curve.sides) 
             {
@@ -1207,7 +1204,7 @@ namespace FloatingHorizont
         {
             complete_matrix_perspective = multiply_matrix(view_matrix, perspective_projection_matrix);
             complete_matrix_orthoganal = multiply_matrix(view_matrix, orthoganal_projection_matrix);
-            complete_inverse_matrix = MatrixInverser.Inverse(complete_matrix_perspective);
+            //complete_inverse_matrix = MatrixInverser.Inverse(complete_matrix_perspective);
 
         }
         public Point3D Up
@@ -1564,7 +1561,7 @@ namespace FloatingHorizont
         private float angT;
         private float dist;
 
-
+            
 
 
 
